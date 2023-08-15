@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <dimen name="carousel_default_decoration">5dp</dimen>
+    <dimen name="carousel_default_height">250dp</dimen>
+    <dimen name="carousel_default_height_recyclerview">250dp</dimen>
+    <dimen name="carousel_default_size_text_label">22sp</dimen>
+
+</resources>

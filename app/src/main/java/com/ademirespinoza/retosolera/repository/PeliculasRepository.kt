@@ -1,0 +1,151 @@
+package com.ademirespinoza.retosolera.repository
+
+import android.annotation.SuppressLint
+import android.app.Application
+import android.os.AsyncTask
+import android.util.Log
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
+import com.ademirespinoza.retosolera.source.remote.ResponseApi
+import com.ademirespinoza.retosolera.source.local.ResponseDao
+import com.ademirespinoza.retosolera.source.local.ResponseEntity
+import com.ademirespinoza.retosolera.source.local.PeliculasDatabase
+import com.ademirespinoza.retosolera.source.remote.HelperWs
+import com.ademirespinoza.retosolera.util.DownloadFileAsyncTask
+import okhttp3.ResponseBody
+import retrofit2.Call
+import retrofit2.Callback
+import retrofit2.Response
+
+
+class PeliculasRepository(application: Application) {
+
+    private var responseDAo: ResponseDao? = null
+    var list_peliculas: LiveData<ResponseEntity>? = null
+
+    var sizeList: Int? =null
+    var array = arrayListOf<String>()
+
+    //Ws
+    private var response: MutableLiveData<ResponseApi>? = null
+    internal var webserviceData = HelperWs.getServiceData()
+    internal var webserviceImages = HelperWs.getServiceImages()
+
+    init {
+        val database = PeliculasDatabase.getInstance(application)
+        responseDAo = database?.responseDao()
+        list_peliculas = responseDAo?.obtenerData()
+    }
+
+    fun listar_peliculas(): LiveData<ResponseEntity>?{
+        return list_peliculas
+    }
+
+    fun insert(response: ResponseEntity){
+        InsertNotaAsyncTask(responseDAo).execute(response)
+    }
+
+    fun deleteAll(){
+        DeletePeliculasAsyncTask(responseDAo).execute()
+    }
+
+    @SuppressLint("StaticFieldLeak")
+    inner class DeletePeliculasAsyncTask(private val responseDao: ResponseDao?) : AsyncTask<Void, Void, Void>(){
+
+        override fun doInBackground(vararg aVoid: Void): Void? {
+            responseDao?.deleteAll()
+            return  null
+        }
+    }
+
+    @SuppressLint("StaticFieldLeak")
+    inner class InsertNotaAsyncTask(private val responseDao: ResponseDao?) : AsyncTask<ResponseEntity,Void,Void>(){
+
+        override fun doInBackground(vararg response: ResponseEntity): Void? {
+            responseDao?.insert(response[0])
+            return  null
+        }
+    }
+
+    //ws
+    fun obtenerPeliculas(id: Int): LiveData<ResponseApi> {
+
+        if (response == null) {
+            response = MutableLiveData()
+            listarPeliculasRemoto(id)
+        }
+
+        return response as MutableLiveData<ResponseApi>
+    }
+
+    private fun listarPeliculasRemoto(id: Int) {
+
+        webserviceData.obtenerDataRemota(id).enqueue(object : Callback<ResponseApi> {
+            override fun onFailure(call: Call<ResponseApi>, t: Throwable) {
+                Log.e("TAG", t.message.toString())
+            }
+
+            override fun onResponse(call: Call<ResponseApi>, response: Response<ResponseApi>) {
+                when(response.code()){
+
+                    200 -> {
+                        deleteAll()
+                        response.body()?.let {
+                            insert(transformApiToEntity(it))
+                            listarUrlImagenes(it)
+                        }
+                    }
+                }
+            }
+        })
+    }
+
+    private fun listarUrlImagenes(response: ResponseApi) {
+
+        val list_images = arrayListOf<String>()
+        list_images.add(response.backdrop_path.substring(1))
+        list_images.add(response.poster_path.substring(1))
+
+        for (ls in response.results){
+            list_images.add(ls.backdrop_path.substring(1))
+            list_images.add(ls.poster_path.substring(1))
+        }
+
+        array = ArrayList()
+
+        for (path in list_images) {
+            array.add(path)
+        }
+        sizeList = array.size
+
+        descargarImagenes()
+    }
+
+    private fun descargarImagenes(){
+
+        if (sizeList != 0) {
+            webserviceImages.obtenerImagen(array.get(array.size - sizeList!!)).enqueue(object : Callback<ResponseBody> {
+                override fun onFailure(call: Call<ResponseBody>, t: Throwable) {
+                    Log.e("TAG", t.message.toString())
+                }
+
+                override fun onResponse(call: Call<ResponseBody>, response: Response<ResponseBody>) {
+                    when(response.code()){
+
+                        200 -> {
+                            val downloadFileAsyncTask = DownloadFileAsyncTask(array.get(array.size - sizeList!!))
+                            downloadFileAsyncTask.execute(response.body()?.byteStream())
+                            sizeList = sizeList!!.dec()
+                            descargarImagenes()
+                        }
+                    }
+                }
+            })
+        }
+    }
+
+    fun transformApiToEntity(response: ResponseApi):ResponseEntity{
+
+        return ResponseEntity(response.id,response.page,response.revenue,response.name,response.description,response.backdrop_path,response.results,response.average_rating,response.poster_path,"","")
+    }
+}

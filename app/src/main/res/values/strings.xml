@@ -1,0 +1,6 @@
+<resources>
+    <string name="app_name">RetoSolera</string>
+    <string name="end_default_description">Tenemos\nmás opciones\npara ti</string>
+    <string name="end_default_button">Ver más</string>
+    <string name="votes">votes</string>
+</resources>

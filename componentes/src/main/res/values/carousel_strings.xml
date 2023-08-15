@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="carousel_label">Tipos de película</string>
+    <string name="carousel_default_layout_recyclerview">linear</string>
+
+</resources>
