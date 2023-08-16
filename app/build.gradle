@@ -59,23 +59,23 @@ dependencies {
     implementation "android.arch.persistence.room:runtime:$room_version"
     kapt "android.arch.persistence.room:compiler:$room_version"
 
-    //Libreria Lifecycle
+    //Libreria Lifecycle:
     implementation "android.arch.lifecycle:extensions:$lifecycle_version"
     annotationProcessor "android.arch.lifecycle:compiler:$lifecycle_version"
 
     implementation 'androidx.recyclerview:recyclerview:1.0.0'
     implementation 'androidx.cardview:cardview:1.0.0'
 
-    //Libreria Logging-interceptor
+    //Libreria Logging-interceptor:
     implementation 'com.squareup.okhttp3:logging-interceptor:3.14.1'
 
-    //Libreria okhttp3
+    //Libreria okhttp3:
     implementation 'com.squareup.okhttp3:okhttp:3.14.1'
 
-    //Libreria Retrofit
+    //Libreria Retrofit:
     implementation 'com.squareup.retrofit2:retrofit:2.6.0'
 
-    //Libreria Gson
+    //Libreria Gson:
     implementation 'com.squareup.retrofit2:converter-gson:2.4.0'
     implementation 'com.google.code.gson:gson:2.8.5'
 
